@@ -831,6 +831,47 @@ body.is-plus .player::before {
   background: linear-gradient(180deg, rgba(255,221,45,.15), transparent 30%);
   pointer-events: none;
 }
+
+/* ===== ADD SONGS MODAL ===== */
+.add-song-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--panel-2);
+  margin-bottom: 6px;
+  transition: .15s;
+}
+.add-song-row:hover { background: #22222e; }
+.add-song-row .asr-icon {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: var(--card-hover);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.add-song-row .asr-info { flex: 1; min-width: 0; }
+.add-song-row .asr-title {
+  font-weight: 700; font-size: 13px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.add-song-row .asr-artist {
+  font-size: 11px; color: var(--text-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.add-song-row .asr-size {
+  font-size: 11px; color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.add-song-row .asr-remove {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-3); flex-shrink: 0;
+  transition: .15s;
+}
+.add-song-row .asr-remove:hover { background: rgba(239,68,68,.15); color: #ef4444; }
+.add-song-row .asr-remove svg { width: 14px; height: 14px; }
 </style>
 </head>
 <body>
@@ -967,6 +1008,10 @@ body.is-plus .player::before {
 
 <!-- ACTION MENU (три точки) -->
 <div class="action-menu" id="actionMenu">
+  <div class="action-menu-item" onclick="actionAddSongs()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+    <span>Добавить песни</span>
+  </div>
   <div class="action-menu-item" onclick="actionAddToPlaylist()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M3 5h6M6 2v6"/></svg>
     <span>Добавить в плейлист</span>
@@ -991,6 +1036,45 @@ body.is-plus .player::before {
 </div>
 
 <input type="file" id="fileInput" accept="audio/*" multiple style="display:none">
+<input type="file" id="multiFileInput" accept="audio/*" multiple style="display:none">
+
+<!-- MODAL: ADD MULTIPLE SONGS -->
+<div class="modal-bg" id="addSongsModalBg">
+  <div class="modal" style="max-width:560px;">
+    <h3>Добавить песни</h3>
+    <div class="modal-sub">Выбери одну или сразу несколько MP3 — они добавятся в библиотеку</div>
+
+    <button class="modal-btn primary" style="width:100%;margin-bottom:14px;padding:16px;" onclick="pickMultipleFiles()">
+      📁 Выбрать файлы
+    </button>
+
+    <div id="addSongsQueue" style="display:none;max-height:340px;overflow-y:auto;margin-bottom:12px;">
+      <div style="font-size:12px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:8px;">
+        Выбрано: <span id="addSongsCount">0</span>
+      </div>
+      <div id="addSongsList"></div>
+    </div>
+
+    <div id="addSongsProgress" style="display:none;margin-bottom:12px;">
+      <div style="font-size:12px;color:var(--text-2);margin-bottom:6px;">
+        Загрузка <span id="addSongsProgressText">0 / 0</span>
+      </div>
+      <div style="height:6px;background:#2a2a35;border-radius:999px;overflow:hidden;">
+        <div id="addSongsProgressFill" style="height:100%;width:0%;background:var(--accent);transition:width .2s;"></div>
+      </div>
+    </div>
+
+    <label class="modal-check" id="addSongsToPlaylistCheck" style="display:none;">
+      <input type="checkbox" id="addSongsToCurrentPlaylist">
+      <span id="addSongsToCurrentPlaylistLabel">Добавить в текущий плейлист</span>
+    </label>
+
+    <div class="modal-actions">
+      <button class="modal-btn secondary" onclick="closeAddSongsModal()">Отмена</button>
+      <button class="modal-btn primary" id="addSongsConfirm" onclick="confirmAddSongs()" disabled>Добавить</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <!-- MODAL: PLAYLIST CREATE -->
@@ -1650,6 +1734,187 @@ document.addEventListener("click", e => {
     closeActionMenu();
   }
 });
+
+// ===== ADD MULTIPLE SONGS =====
+let pendingFiles = [];       // File[] — выбранные, но ещё не добавленные
+let isAddingSongs = false;
+
+function actionAddSongs() {
+  closeActionMenu();
+  pendingFiles = [];
+  renderPendingFiles();
+  $("addSongsModalBg").classList.add("active");
+
+  // Показать опцию "в текущий плейлист", если он открыт
+  const pl = currentPlaylistId ? playlists.find(p => p.id === currentPlaylistId) : null;
+  if (pl) {
+    $("addSongsToPlaylistCheck").style.display = "flex";
+    $("addSongsToCurrentPlaylistLabel").textContent = `Добавить в «${pl.name}»`;
+    $("addSongsToCurrentPlaylist").checked = true;
+  } else {
+    $("addSongsToPlaylistCheck").style.display = "none";
+  }
+}
+
+function closeAddSongsModal() {
+  if (isAddingSongs) return;
+  $("addSongsModalBg").classList.remove("active");
+}
+$("addSongsModalBg").addEventListener("click", e => {
+  if (e.target.id === "addSongsModalBg") closeAddSongsModal();
+});
+
+function pickMultipleFiles() {
+  $("multiFileInput").click();
+}
+
+$("multiFileInput").addEventListener("change", e => {
+  const files = [...e.target.files];
+  // Фильтр: только аудио
+  const audioFiles = files.filter(f => f.type.startsWith("audio/") || /\.(mp3|m4a|ogg|wav|flac|aac|opus|webm)$/i.test(f.name));
+  if (audioFiles.length < files.length) {
+    toast(`Пропущено ${files.length - audioFiles.length} не-аудио файлов`);
+  }
+  // Добавить к очереди, без дубликатов по name+size
+  for (const f of audioFiles) {
+    const dup = pendingFiles.some(p => p.name === f.name && p.size === f.size);
+    if (!dup) pendingFiles.push(f);
+  }
+  renderPendingFiles();
+  e.target.value = "";
+});
+
+function renderPendingFiles() {
+  const wrap = $("addSongsQueue");
+  const list = $("addSongsList");
+  const confirm = $("addSongsConfirm");
+
+  if (pendingFiles.length === 0) {
+    wrap.style.display = "none";
+    confirm.disabled = true;
+    confirm.textContent = "Добавить";
+    return;
+  }
+
+  wrap.style.display = "block";
+  $("addSongsCount").textContent = pendingFiles.length;
+  confirm.disabled = false;
+  confirm.textContent = `Добавить ${pendingFiles.length}`;
+
+  list.innerHTML = pendingFiles.map((f, i) => {
+    const sizeMB = (f.size / 1024 / 1024).toFixed(1);
+    const name = f.name.replace(/\.[^.]+$/, "");
+    return `
+      <div class="add-song-row">
+        <div class="asr-icon">🎵</div>
+        <div class="asr-info">
+          <div class="asr-title">${esc(name)}</div>
+          <div class="asr-artist">${esc(f.name)}</div>
+        </div>
+        <div class="asr-size">${sizeMB} МБ</div>
+        <button class="asr-remove" onclick="removePendingFile(${i})" title="Убрать">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    `;
+  }).join("");
+}
+
+function removePendingFile(i) {
+  pendingFiles.splice(i, 1);
+  renderPendingFiles();
+}
+
+async function confirmAddSongs() {
+  if (pendingFiles.length === 0 || isAddingSongs) return;
+  isAddingSongs = true;
+  const addToPlaylist = currentPlaylistId && $("addSongsToCurrentPlaylist").checked;
+  const pl = addToPlaylist ? playlists.find(p => p.id === currentPlaylistId) : null;
+
+  const total = pendingFiles.length;
+  let done = 0;
+
+  $("addSongsProgress").style.display = "block";
+  $("addSongsProgressText").textContent = `0 / ${total}`;
+  $("addSongsProgressFill").style.width = "0%";
+  $("addSongsConfirm").disabled = true;
+
+  const newIds = [];
+
+  for (const f of pendingFiles) {
+    try {
+      const id = "t_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
+      const name = f.name.replace(/\.[^.]+$/, "");
+      let title = name, artist = "Неизвестный исполнитель", customImage = null;
+      let tagsRead = false;
+
+      try {
+        const tags = await readMP3Tags(f);
+        if (tags) {
+          if (tags.title) { title = tags.title; tagsRead = true; }
+          if (tags.artist) { artist = tags.artist; tagsRead = true; }
+          if (tags.picture) customImage = tags.picture;
+        }
+      } catch (err) { /* ignore */ }
+
+      if (!tagsRead && name.includes(" - ")) {
+        const p = name.split(" - ");
+        artist = p[0].trim();
+        title = p.slice(1).join(" - ").trim();
+      }
+
+      const t = {
+        id, title, artist,
+        art: rnd(ART), emoji: rnd(EMO), color: rnd(COL),
+        blob: f,
+        customImage,
+        showArtist: true
+      };
+      tracks.push(t);
+      newIds.push(id);
+      await put("tracks", t);
+    } catch (err) {
+      console.error("Ошибка добавления", f.name, err);
+    }
+
+    done++;
+    $("addSongsProgressText").textContent = `${done} / ${total}`;
+    $("addSongsProgressFill").style.width = (done / total * 100) + "%";
+  }
+
+  // Добавить в плейлист, если нужно
+  if (pl && newIds.length) {
+    pl.trackIds = [...new Set([...(pl.trackIds || []), ...newIds])];
+    await put("playlists", pl);
+  }
+
+  // Если ничего не играет — показать первый
+  if (!currentId && newIds.length) {
+    const firstNew = tracks.find(t => t.id === newIds[0]);
+    if (firstNew) {
+      currentId = firstNew.id;
+      const wrap = $("playerArtWrap");
+      if (firstNew.customImage) {
+        wrap.style.background = "#111";
+        $("playerArt").innerHTML = `<img src="${firstNew.customImage}" alt="">`;
+      } else {
+        wrap.style.background = firstNew.color;
+        $("playerArt").innerHTML = `<span>${firstNew.emoji}</span>`;
+      }
+      $("playerTitle").textContent = firstNew.title;
+      $("playerArtist").textContent = hasArtist(firstNew) ? firstNew.artist : "";
+      updatePlayerLike();
+    }
+  }
+
+  isAddingSongs = false;
+  pendingFiles = [];
+  renderPendingFiles();
+  $("addSongsProgress").style.display = "none";
+  closeAddSongsModal();
+  render();
+  toast(`Добавлено треков: ${newIds.length}`);
+} 
 
 function actionAddToPlaylist() {
   closeActionMenu();
