@@ -2,13 +2,20 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <title>My Music</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <style>
+  @media (max-width: 768px) {
+  .main { -webkit-overflow-scrolling: touch; }
+  .track-list { contain: content; }
+  .grid { contain: content; }
+  body { overscroll-behavior-y: contain; }
+}
 :root {
   --bg: #000;
   --panel: #0e0e14;
@@ -382,9 +389,9 @@ input { font-family: inherit; }
   .main { padding: 20px 20px 120px; }
 }
 @media (max-width: 768px) {
-  body { overflow: auto; }
+    body { overflow: hidden; }
   .app { grid-template-columns: 1fr; height: 100dvh; }
-  .sidebar, .player { display: none; }
+  .main { padding: 16px 16px 200px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .main { padding: 16px 16px 200px; overflow-y: auto; }
   .topbar { padding: 8px 0; top: -16px; }
   .search { font-size: 15px; }
@@ -1135,6 +1142,144 @@ body.radio-live .player-art-wrap::after {
   color: var(--text);
 }
 .mobile-drawer-item svg { width: 22px; height: 22px; flex-shrink: 0; }
+/* ===== СФЕРА ИЗ ЧАСТИЦ (Three.js) ===== */
+.wave-sphere-wrap {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: visible;
+  cursor: pointer;
+}
+#waveSphere {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#waveSphere canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+/* Плавное свечение вокруг сферы */
+.wave-sphere-wrap::after {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(236,72,153,.35), rgba(139,92,246,.2), transparent 70%);
+  filter: blur(30px);
+  z-index: 0;
+  pointer-events: none;
+  animation: sphereGlow 4s ease-in-out infinite alternate;
+}
+@keyframes sphereGlow {
+  0%   { opacity: .7; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1.15); }
+}
+/* Мобильная адаптация */
+@media (max-width: 768px) {
+  .wave-sphere-wrap {
+    width: 180px;
+    height: 180px;
+  }
+}
+
+/* ===== ТЕКСТ ПЕСНИ (КАРАОКЕ) ===== */
+.lyrics-panel {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.92);
+  backdrop-filter: blur(20px);
+  z-index: 950;
+  flex-direction: column;
+  padding: 20px;
+  padding-top: calc(20px + env(safe-area-inset-top));
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+}
+.lyrics-panel.active { display: flex; }
+
+.lyrics-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+.lyrics-title { font-size: 16px; font-weight: 800; }
+.lyrics-close {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+}
+.lyrics-close:hover { background: rgba(255,255,255,.1); }
+.lyrics-close svg { width: 22px; height: 22px; }
+
+.lyrics-content {
+  flex: 1;
+  overflow-y: auto;
+  text-align: center;
+  padding: 20px 10px 80px;
+  scroll-behavior: smooth;
+}
+.lyrics-line {
+  font-size: 22px;
+  font-weight: 700;
+  color: rgba(255,255,255,.35);
+  line-height: 1.5;
+  margin-bottom: 18px;
+  transition: color .3s, transform .3s;
+  cursor: pointer;
+}
+.lyrics-line.active {
+  color: #fff;
+  transform: scale(1.06);
+  font-size: 24px;
+}
+.lyrics-empty {
+  text-align: center;
+  color: var(--text-2);
+  padding: 60px 20px;
+  font-size: 14px;
+}
+.lyrics-empty-icon { font-size: 64px; margin-bottom: 16px; opacity: .4; }
+
+/* Кнопка в плеере */
+.lyrics-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  color: var(--text-2);
+  transition: .15s;
+}
+.lyrics-toggle:hover { color: var(--text); background: var(--panel-2); }
+.lyrics-toggle.active { color: var(--accent); }
+.lyrics-toggle svg { width: 20px; height: 20px; }
+
+@media (max-width: 768px) {
+  /* Убираем тяжёлые blur-фильтры — они греют процессор */
+  .wave-hero::before {
+    filter: blur(40px);
+    animation-duration: 60s;
+  }
+  .plus-stars { display: none; }
+  .wave-hero-main::before,
+  .wave-hero-main::after { display: none; }
+
+  /* Меньше анимаций на карточках */
+  .card:hover { transform: none; }
+  .radio-card:hover { transform: none; }
+  .track:hover { background: transparent; }
+
+  /* Сфера — уменьшаем количество частиц (см. ниже) */
+}
 </style>
 </head>
 <body>
@@ -1259,6 +1404,9 @@ body.radio-live .player-art-wrap::after {
         <button class="ctrl-btn" id="btnEq" title="Эквалайзер Plus" style="margin: 0 auto;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M4 6V4M12 20v-6M12 10V4M20 20v-4M20 12V4M1 10h6M9 14h6M17 16h6"/></svg>
     </button>
+        <button class="lyrics-toggle" id="btnLyrics" title="Текст песни">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h12M4 18h16"/></svg>
+    </button>
     <div class="player-footer">
       <button class="ctrl-btn" id="btnLikePlayer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21.3l7.8-7.8 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg></button>
       <button class="ctrl-btn" id="volumeBtn" title="Звук"><svg id="volumeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 5 6 9H2v6h4l5 4zM15 9a4 4 0 0 1 0 6"/></svg></button>
@@ -1338,6 +1486,10 @@ body.radio-live .player-art-wrap::after {
   <div class="action-menu-item" onclick="actionShare()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>
     <span>Поделиться</span>
+  </div>
+    <div class="action-menu-item" onclick="actionDownload()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+    <span>Скачать</span>
   </div>
   <div class="action-menu-divider"></div>
   <div class="action-menu-item" onclick="actionShuffleWave()">
@@ -1487,6 +1639,17 @@ body.radio-live .player-art-wrap::after {
       <button class="modal-btn primary" onclick="createRadioStation()">Создать</button>
     </div>
   </div>
+</div>
+
+<!-- LYRICS PANEL -->
+<div class="lyrics-panel" id="lyricsPanel">
+  <div class="lyrics-header">
+    <div class="lyrics-title" id="lyricsTitle">Текст песни</div>
+    <button class="lyrics-close" onclick="closeLyrics()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="lyrics-content" id="lyricsContent"></div>
 </div>
 
 <!-- MODAL: PLUS PURCHASE -->
@@ -2741,6 +2904,181 @@ function syncMobileDrawerActive() {
   });
 }
 
+// ===== СФЕРА ИЗ ЧАСТИЦ (Three.js) =====
+let sphereScene, sphereCamera, sphereRenderer, sphereParticles, sphereTime = 0;
+let sphereAnalyser = null, sphereDataArray = null;
+
+function initSphere() {
+  const container = document.getElementById('waveSphere');
+  if (!container) return;
+
+  // Если уже инициализирована — пересоздаём (render() вызывается много раз)
+  if (sphereRenderer) {
+    try { sphereRenderer.dispose(); } catch (_) {}
+    sphereRenderer = null;
+    sphereParticles = null;
+  }
+
+  const size = container.clientWidth || 220;
+
+  sphereScene = new THREE.Scene();
+  sphereCamera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  sphereCamera.position.z = 5.5;
+
+  sphereRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  sphereRenderer.setSize(size, size);
+  sphereRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  sphereRenderer.setClearColor(0x000000, 0);
+  container.appendChild(sphereRenderer.domElement);
+
+  // 2500 частиц на сфере
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+  const count = isMobile ? 900 : 2500;
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  const sizes = new Float32Array(count);
+  const basePositions = new Float32Array(count * 3); // для пульсации
+
+  for (let i = 0; i < count; i++) {
+    // Равномерное распределение на сфере (спираль Фибоначчи)
+    const y = 1 - (i / (count - 1)) * 2;
+    const radius = Math.sqrt(1 - y * y);
+    const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+    const x = Math.cos(theta) * radius;
+    const z = Math.sin(theta) * radius;
+
+    const R = 2;
+    positions[i * 3]     = basePositions[i * 3]     = x * R;
+    positions[i * 3 + 1] = basePositions[i * 3 + 1] = y * R;
+    positions[i * 3 + 2] = basePositions[i * 3 + 2] = z * R;
+
+    // Цвета: оттенки розового / оранжевого / фиолетового
+    const hue = 0.85 + (i / count) * 0.35;   // 0.85 → 1.20 (в HSL это розовый → фиолетовый)
+    const c = new THREE.Color().setHSL(hue % 1, 0.9, 0.6);
+    colors[i * 3] = c.r;
+    colors[i * 3 + 1] = c.g;
+    colors[i * 3 + 2] = c.b;
+
+    sizes[i] = Math.random() * 0.05 + 0.02;
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+  // Шейдер: круглые точки с glow
+  const mat = new THREE.ShaderMaterial({
+    vertexShader: `
+      attribute float size;
+      varying vec3 vColor;
+      void main() {
+        vColor = color;
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        gl_PointSize = size * (350.0 / -mv.z);
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vColor;
+      void main() {
+        vec2 c = gl_PointCoord - 0.5;
+        float d = length(c);
+        if (d > 0.5) discard;
+        float glow = exp(-d * 5.0);
+        gl_FragColor = vec4(vColor, glow);
+      }
+    `,
+    transparent: true,
+    vertexColors: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+
+  sphereParticles = new THREE.Points(geo, mat);
+  sphereParticles.userData.basePositions = basePositions;
+  sphereParticles.userData.count = count;
+  sphereScene.add(sphereParticles);
+
+  // Анализатор звука (если audioCtx уже есть — используем; иначе создадим при первом play)
+  if (audioCtx && audioSourceNode) {
+    try {
+      sphereAnalyser = audioCtx.createAnalyser();
+      sphereAnalyser.fftSize = 64;
+      sphereDataArray = new Uint8Array(sphereAnalyser.frequencyBinCount);
+      audioSourceNode.connect(sphereAnalyser);
+    } catch (_) {}
+  }
+
+  animateSphere();
+}
+
+function animateSphere() {
+  requestAnimationFrame(animateSphere);
+  if (!sphereRenderer || !sphereParticles) return;
+
+  sphereTime += 0.01;
+
+  // Вращение
+  sphereParticles.rotation.y = sphereTime * 0.35;
+  sphereParticles.rotation.x = Math.sin(sphereTime * 0.4) * 0.15;
+
+  // Пульсация «дыхание»
+  let pulse = 1 + Math.sin(sphereTime * 1.6) * 0.05;
+
+  // Реакция на звук
+  if (sphereAnalyser && sphereDataArray) {
+    sphereAnalyser.getByteFrequencyData(sphereDataArray);
+    // Средний уровень басов (первые 6 бинов)
+    let bass = 0;
+    for (let i = 0; i < 6; i++) bass += sphereDataArray[i];
+    bass /= 6 * 255; // 0..1
+    pulse += bass * 0.35;
+  }
+
+  sphereParticles.scale.set(pulse, pulse, pulse);
+
+  sphereRenderer.render(sphereScene, sphereCamera);
+}
+
+// ===== ГОРЯЧИЕ КЛАВИШИ (только ПК) =====
+document.addEventListener("keydown", e => {
+  // Игнорируем, если фокус в поле ввода
+  const tag = (e.target.tagName || "").toLowerCase();
+  if (tag === "input" || tag === "textarea" || e.target.isContentEditable) return;
+
+  // ПРОБЕЛ — Play/Pause
+  if (e.code === "Space") {
+    e.preventDefault();
+    togglePlay();
+    return;
+  }
+
+  // ← → — перемотка на 5 секунд
+  if (e.code === "ArrowLeft") {
+    e.preventDefault();
+    if (audio.duration) audio.currentTime = Math.max(0, audio.currentTime - 5);
+    return;
+  }
+  if (e.code === "ArrowRight") {
+    e.preventDefault();
+    if (audio.duration) audio.currentTime = Math.min(audio.duration, audio.currentTime + 5);
+    return;
+  }
+
+  // Home / End — в начало / в конец
+  if (e.code === "Home") {
+    e.preventDefault();
+    audio.currentTime = 0;
+    return;
+  }
+  if (e.code === "End") {
+    e.preventDefault();
+    if (audio.duration) audio.currentTime = audio.duration - 0.5;
+    return;
+  }
+});
+
 // ===== VIEW =====
 function setView(v) {
   if (v === "wave" && view === "collection" && currentId && likedIds.has(currentId)) {
@@ -2802,11 +3140,11 @@ function render() {
       <section class="wave-hero ${isPlaying ? 'playing' : ''}">
         ${modeBar}
         <div class="wave-hero-label">Моя волна</div>
-        <div class="wave-hero-main">
-          <div class="wave-hero-cover" style="background:${waveCover?'#111':display.color};" onclick="togglePlay()">
-            ${coverHTML}
-            <div class="wave-hero-cover-play">
-              ${isPlaying ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>' : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>'}
+                <div class="wave-hero-main">
+          <div class="wave-sphere-wrap" onclick="togglePlay()">
+            <div id="waveSphere"></div>
+            <div class="wave-hero-cover-play" style="opacity:0; transition:opacity .2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">
+              ${isPlaying ? '<svg viewBox="0 0 24 24" fill="currentColor" style="width:56px;height:56px;color:#fff;filter:drop-shadow(0 4px 12px rgba(0,0,0,.5))"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>' : '<svg viewBox="0 0 24 24" fill="currentColor" style="width:56px;height:56px;color:#fff;filter:drop-shadow(0 4px 12px rgba(0,0,0,.5))"><path d="M8 5v14l11-7z"/></svg>'}
             </div>
           </div>
                     <div class="wave-hero-info">
@@ -2830,7 +3168,8 @@ function render() {
                     </div>
         </div>
       </section>`;
-    initWaveSwipe();
+        initWaveSwipe();
+    initSphere();       // ← добавлено
     return;
   }
 
@@ -3060,11 +3399,19 @@ audio.addEventListener("play", () => {
   isPlaying = true;
   updatePlayIcons();
   updateFullPlayerUI();
-  render();
-  // Если аудио-граф уже создан, убедимся, что контекст не спит
+  // Обновляем ТОЛЬКО элементы управления и подсветку, а не всё
+  updateTrackPlayState();
+  document.querySelector(".wave-hero")?.classList.add("playing");
   if (audioCtx && audioCtx.state === "suspended") {
     audioCtx.resume().catch(()=>{});
   }
+});
+audio.addEventListener("pause", () => {
+  isPlaying = false;
+  updatePlayIcons();
+  updateFullPlayerUI();
+  updateTrackPlayState();
+  document.querySelector(".wave-hero")?.classList.remove("playing");
 });
 audio.addEventListener("play", () => {
   isPlaying = true;
@@ -3081,13 +3428,28 @@ audio.addEventListener("pause", () => {
   document.querySelector(".wave-hero")?.classList.remove("playing");
 });
 
+let _lastSavePosition = 0;
 audio.addEventListener("timeupdate", () => {
   const p = audio.duration ? (audio.currentTime/audio.duration)*100 : 0;
-  $("progressFill").style.width = p+"%";
+  $("progressFill").style.width = p+"%"; 
   $("mpProgressFill").style.width = p+"%";
   $("fpProgressFill").style.width = p+"%";
   $("timeCurrent").textContent = fmt(audio.currentTime);
   $("fpTimeCurrent").textContent = fmt(audio.currentTime);
+
+  // Раз в 5 секунд сохраняем позицию
+  const now = Date.now();
+  if (now - _lastSavePosition > 5000 && currentId && audio.duration > 10) {
+    _lastSavePosition = now;
+    setMeta("lastTrack", { id: currentId, position: audio.currentTime, at: now });
+  }
+});
+
+// При паузе тоже сохраняем
+audio.addEventListener("pause", () => {
+  if (currentId && audio.currentTime > 1) {
+    setMeta("lastTrack", { id: currentId, position: audio.currentTime, at: Date.now() });
+  }
 });
 audio.addEventListener("loadedmetadata", () => { 
   $("timeTotal").textContent = fmt(audio.duration); 
@@ -3105,6 +3467,27 @@ function updatePlayIcons() {
   $("mpIcon").innerHTML = d;
   $("fpPlayIcon").innerHTML = d;
   $("playerArtWrap").classList.toggle("playing", isPlaying);
+}
+
+function updatePlayIcons() {
+  const d = isPlaying ? '<path d="M6 4h4v16H6zM14 4h4v16h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
+  $("playIcon").innerHTML = d; 
+  $("mpIcon").innerHTML = d;
+  $("fpPlayIcon").innerHTML = d;
+  $("playerArtWrap").classList.toggle("playing", isPlaying);
+}
+
+// ← ВСТАВИТЬ НОВУЮ ФУНКЦИЮ ЗДЕСЬ
+function updateTrackPlayState() {
+  document.querySelectorAll(".track").forEach(el => {
+    const isPlayingThis = el.getAttribute("onclick") === `playById('${currentId}')`;
+    el.classList.toggle("playing", isPlayingThis);
+    const num = el.querySelector(".track-num");
+    if (num) {
+      if (isPlayingThis) num.innerHTML = isPlaying ? ICON_PAUSE : ICON_PLAY;
+      // Номер для остальных не трогаем
+    }
+  });
 }
 
 // ===== EVENTS =====
@@ -3630,6 +4013,193 @@ function handleRadioEnded() {
   return true;
 }
 
+// ===== СКАЧИВАНИЕ =====
+async function actionDownload() {
+  closeActionMenu();
+  if (!currentId) return;
+  const t = tracks.find(x => x.id === currentId);
+  if (!t) return;
+
+  try {
+    let url;
+    let filename = (t.artist && hasArtist(t) ? t.artist + " - " : "") + t.title + ".mp3";
+    filename = filename.replace(/[\\/:*?"<>|]/g, "_");
+
+    if (t.isBuiltin && t.blobUrl) {
+      url = t.blobUrl;
+    } else if (t.blob) {
+      url = URL.createObjectURL(t.blob);
+    } else {
+      toast("Нечего скачивать");
+      return;
+    }
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    // Чистим blob URL только для не-builtin
+    if (!t.isBuiltin) {
+      setTimeout(() => URL.revokeObjectURL(url), 3000);
+    }
+
+    toast("Скачивание началось");
+  } catch (e) {
+    console.error(e);
+    toast("Ошибка скачивания");
+  }
+}
+
+// ===== ТЕКСТ ПЕСНИ (КАРАОКЕ) =====
+let lyricsData = [];       // [{time, text}]
+let lyricsIndex = -1;
+
+function openLyrics() {
+  if (!currentId) { toast("Сначала включи трек"); return; }
+  const t = tracks.find(x => x.id === currentId);
+  if (!t) return;
+  $("lyricsTitle").textContent = t.title + (hasArtist(t) ? " — " + t.artist : "");
+  loadLyrics(t);
+  $("lyricsPanel").classList.add("active");
+}
+function closeLyrics() {
+  $("lyricsPanel").classList.remove("active");
+}
+$("lyricsPanel").addEventListener("click", e => {
+  if (e.target.id === "lyricsPanel") closeLyrics();
+});
+
+// Загрузка текста:
+// 1) Пробуем взять из localStorage (пользователь мог добавить вручную)
+// 2) Пробуем найти в meta-сохранении
+async function loadLyrics(t) {
+  lyricsData = [];
+  lyricsIndex = -1;
+
+  // Пробуем получить из базы
+  const key = "lyrics_" + t.id;
+  const saved = await getMeta(key);
+  if (saved && Array.isArray(saved)) {
+    lyricsData = saved;
+    renderLyrics();
+    return;
+  }
+
+  // Нет текста — показываем форму добавления
+  renderLyricsEmpty(t);
+}
+
+function renderLyrics() {
+  const cont = $("lyricsContent");
+  if (!lyricsData.length) return;
+  cont.innerHTML = lyricsData.map((line, i) =>
+    `<div class="lyrics-line" data-index="${i}">${esc(line.text || line)}</div>`
+  ).join("");
+}
+
+function renderLyricsEmpty(t) {
+  const cont = $("lyricsContent");
+  cont.innerHTML = `
+    <div class="lyrics-empty">
+      <div class="lyrics-empty-icon">📝</div>
+      <div>Текста пока нет</div>
+      <div style="margin-top:8px;font-size:12px;color:var(--text-3)">Вставь текст вручную — строки через Enter</div>
+      <textarea id="lyricsInput" placeholder="Строка 1&#10;Строка 2&#10;Строка 3"
+        style="width:100%;max-width:500px;height:200px;margin-top:16px;padding:14px;border-radius:12px;background:var(--panel-2);color:#fff;border:1px solid var(--border);font-family:inherit;font-size:14px;resize:vertical;"></textarea>
+      <div style="margin-top:12px;">
+        <button class="modal-btn primary" style="padding:10px 24px;border-radius:24px;" onclick="saveLyricsFromInput('${t.id}')">Сохранить</button>
+      </div>
+    </div>
+  `;
+}
+
+async function saveLyricsFromInput(trackId) {
+  const input = $("lyricsInput");
+  if (!input) return;
+  const lines = input.value.split("\n").map(s => s.trim()).filter(Boolean);
+  if (!lines.length) { toast("Пусто"); return; }
+  lyricsData = lines.map(text => ({ text }));
+  await setMeta("lyrics_" + trackId, lyricsData);
+  renderLyrics();
+  toast("Текст сохранён");
+}
+
+// Подсветка активной строки (если с текстом связан тайминг)
+// Простая версия — просто выделяем по мере продвижения трека
+audio.addEventListener("timeupdate", () => {
+  if (!$("lyricsPanel").classList.contains("active")) return;
+  if (!lyricsData.length || !audio.duration) return;
+  const ratio = audio.currentTime / audio.duration;
+  const idx = Math.min(lyricsData.length - 1, Math.floor(ratio * lyricsData.length));
+  if (idx === lyricsIndex) return;
+  lyricsIndex = idx;
+  document.querySelectorAll(".lyrics-line").forEach((el, i) => {
+    el.classList.toggle("active", i === idx);
+  });
+  // Автопрокрутка к активной строке
+  const active = document.querySelector(".lyrics-line.active");
+  if (active) active.scrollIntoView({ behavior: "smooth", block: "center" });
+});
+
+// Кнопка в плеере
+$("btnLyrics").addEventListener("click", openLyrics);
+
+// ===== КРОССФЕЙД =====
+let crossfadeEnabled = false;
+let crossfadeDuration = 3;        // секунды
+let crossfadeGain = null;
+let crossfadeTriggered = false;
+
+// Создаём gain node в графе (если есть audioCtx)
+function initCrossfade() {
+  if (!audioCtx || crossfadeGain) return;
+  try {
+    crossfadeGain = audioCtx.createGain();
+    // Вставляем между последним фильтром EQ и destination
+    // Если EQ есть, переподключаем конец цепочки
+    if (eqBands.length) {
+      const lastBand = eqBands[eqBands.length - 1];
+      try { lastBand.disconnect(); } catch (_) {}
+      lastBand.connect(crossfadeGain);
+      crossfadeGain.connect(audioCtx.destination);
+    } else if (audioSourceNode) {
+      try { audioSourceNode.disconnect(); } catch (_) {}
+      audioSourceNode.connect(crossfadeGain);
+      crossfadeGain.connect(audioCtx.destination);
+    }
+  } catch (e) { console.warn("crossfade init error", e); }
+}
+
+// Следим за окончанием трека, чтобы начать fade out
+audio.addEventListener("timeupdate", () => {
+  if (!crossfadeEnabled || !crossfadeGain) return;
+  if (!audio.duration || audio.duration < crossfadeDuration * 2) return;
+  const remaining = audio.duration - audio.currentTime;
+
+  if (remaining <= crossfadeDuration && remaining > 0 && !crossfadeTriggered) {
+    crossfadeTriggered = true;
+    // Плавно убираем громкость Web Audio
+    const now = audioCtx.currentTime;
+    crossfadeGain.gain.cancelScheduledValues(now);
+    crossfadeGain.gain.setValueAtTime(crossfadeGain.gain.value, now);
+    crossfadeGain.gain.linearRampToValueAtTime(0.0001, now + remaining);
+  }
+});
+
+// При смене трека — плавно возвращаем громкость
+audio.addEventListener("play", () => {
+  if (crossfadeEnabled && crossfadeGain && audioCtx) {
+    const now = audioCtx.currentTime;
+    crossfadeGain.gain.cancelScheduledValues(now);
+    crossfadeGain.gain.setValueAtTime(0.0001, now);
+    crossfadeGain.gain.linearRampToValueAtTime(1.0, now + 1.5);
+  }
+  crossfadeTriggered = false;
+});
+
 // ===== PLUS SUBSCRIPTION =====
 function openPlusModal() {
   if (isPlus) { toast("У вас уже есть Plus"); return; }
@@ -3752,6 +4322,14 @@ function initAudioContext() {
 
     // Финальное подключение к выходу
     prev.connect(audioCtx.destination);
+
+    // Анализатор для сферы
+    try {
+      sphereAnalyser = audioCtx.createAnalyser();
+      sphereAnalyser.fftSize = 64;
+      sphereDataArray = new Uint8Array(sphereAnalyser.frequencyBinCount);
+      audioSourceNode.connect(sphereAnalyser);
+    } catch (_) {}
 
     // Применяем текущие значения EQ к новым фильтрам
     eqBands.forEach((b, i) => b.gain.value = eqValues[i] || 0);
@@ -3909,7 +4487,28 @@ function fileToDataURL(file) {
     } catch (e) {}
   }
 
-  audio.addEventListener("volumechange", () => setMeta("volume", audio.volume));
+    audio.addEventListener("volumechange", () => setMeta("volume", audio.volume));
+
+  // Восстанавливаем последний трек и позицию
+  try {
+    const last = await getMeta("lastTrack");
+    if (last && last.id && last.position > 2) {
+      const t = tracks.find(x => x.id === last.id);
+      if (t) {
+        // Показываем трек в плеере, но НЕ запускаем — ждём клика
+        currentId = t.id;
+        updatePlayerCard(t);
+        // Позицию применим, когда загрузится
+        audio.addEventListener("loadedmetadata", function once() {
+          audio.removeEventListener("loadedmetadata", once);
+          try { audio.currentTime = last.position; } catch (_) {}
+        });
+        // Ставим src, чтобы loadedmetadata сработал
+        if (t.isBuiltin && t.blobUrl) audio.src = t.blobUrl;
+        else if (t.blob) audio.src = URL.createObjectURL(t.blob);
+      }
+    }
+  } catch (_) {}
 
   updateVolUI();
   renderProfileMini();
