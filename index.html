@@ -912,6 +912,135 @@ body.is-plus .player::before {
   0%, 100% { height: 6px; opacity: .6; }
   50%      { height: 28px; opacity: 1; }
 }
+/* ===== RADIO ===== */
+.radio-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 40px;
+}
+.radio-card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 14px;
+  cursor: pointer;
+  transition: .25s var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+.radio-card:hover {
+  background: var(--card-hover);
+  transform: translateY(-4px);
+}
+.radio-cover {
+  aspect-ratio: 1;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 56px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+}
+.radio-cover img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+.radio-cover .radio-live {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(0,0,0,.3);
+  animation: livePulse 1.6s ease-in-out infinite;
+}
+.radio-cover .radio-live.local {
+  background: #10b981;
+  animation: none;
+}
+@keyframes livePulse {
+  0%,100% { opacity: 1; }
+  50% { opacity: .55; }
+}
+.radio-title {
+  font-weight: 800;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+.radio-meta {
+  font-size: 12px;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.radio-play {
+  position: absolute;
+  right: 22px;
+  bottom: 78px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: .25s var(--ease);
+  box-shadow: 0 8px 24px rgba(0,0,0,.5);
+  z-index: 3;
+}
+.radio-card:hover .radio-play { opacity: 1; transform: translateY(0); }
+.radio-play svg { width: 20px; height: 20px; }
+.radio-card.is-live .radio-live { animation: livePulse 1.6s ease-in-out infinite; }
+.radio-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 4;
+  display: flex;
+  gap: 6px;
+}
+.radio-action-btn {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(0,0,0,.6);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  opacity: 0;
+  transition: .15s;
+  backdrop-filter: blur(6px);
+}
+.radio-card:hover .radio-action-btn { opacity: 1; }
+.radio-action-btn:hover { background: rgba(0,0,0,.85); }
+.radio-action-btn svg { width: 14px; height: 14px; }
+
+/* Плашка "Играет радио" в плеере */
+body.radio-live .player-art-wrap::after {
+  content: "LIVE";
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: #ef4444;
+  color: #fff;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 900;
+  border-radius: 6px;
+  letter-spacing: 1.5px;
+  z-index: 4;
+  animation: livePulse 1.6s ease-in-out infinite;
+}
 </style>
 </head>
 <body>
@@ -925,9 +1054,12 @@ body.is-plus .player::before {
       <button class="menu-item" data-view="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Поиск</button>
       <button class="menu-item active" data-view="wave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M5 8v8M19 8v8M2 12h2M20 12h2"/></svg>Моя волна</button>
       <button class="menu-item" data-view="all"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Все песни</button>
-      <button class="menu-item" data-view="fortrends"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Для вас и Тренды</button>
-      <button class="menu-item" data-view="collection"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21.3l7.8-7.8 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg>Коллекция</button>
-        </nav>
+      <button class="menu-item" data-view="fortrends"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>Мои подкасты</button>
+      <button class="menu-item" data-view="books">Книги</button>
+            <button class="menu-item" data-view="collection"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21.3l7.8-7.8 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg>Коллекция</button>
+      <button class="menu-item" data-view="radio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.9 19.1a10 10 0 0 1 0-14.2M7.8 16.2a6 6 0 0 1 0-8.4M16.2 7.8a6 6 0 0 1 0 8.4M19.1 4.9a10 10 0 0 1 0 14.2"/><circle cx="12" cy="12" r="2"/></svg>Радио</button>
+    </nav>
+        
 
     <button class="plus-cta" id="plusCta" onclick="openPlusModal()">
       <div class="plus-cta-icon">+</div>
@@ -1016,12 +1148,9 @@ body.is-plus .player::before {
 </div>
 
 <!-- MOBILE NAV -->
-<nav class="mobile-nav">
-  <button class="mnav-btn active" data-nav="wave" onclick="setView('wave')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M5 8v8M19 8v8M2 12h2M20 12h2"/></svg></button>
-  <button class="mnav-btn" data-nav="search" onclick="setView('search')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></button>
-  <button class="mnav-btn" data-nav="fortrends" onclick="setView('fortrends')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
-  <button class="mnav-btn" data-nav="collection" onclick="setView('collection')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21.3l7.8-7.8 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg></button>
-</nav>
+  <button class="mnav-btn" data-nav="fortrends" onclick="setView('fortrends')">...</button>
+  <button class="mnav-btn" data-nav="books" onclick="setView('books')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></button>
+  <button class="mnav-btn" data-nav="collection" onclick="setView('collection')">...</button>
 
 <!-- FULL PLAYER -->
 <div class="full-player" id="fullPlayer">
@@ -1173,6 +1302,48 @@ body.is-plus .player::before {
     </div>
     <div class="modal-actions">
       <button class="modal-btn secondary" onclick="closeShareModal()">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ADD RADIO STATION -->
+<div class="modal-bg" id="radioAddModalBg">
+  <div class="modal">
+    <h3>Новая станция</h3>
+    <div class="modal-sub">Локальная — соберётся из ваших mp3. Онлайн — по ссылке потока.</div>
+
+    <div class="img-upload">
+      <div class="img-upload-preview" id="radioImgPreview">📻</div>
+      <div class="img-upload-buttons">
+        <button class="img-upload-btn" onclick="pickRadioImage()">📷 Загрузить фото</button>
+        <button class="img-upload-btn remove" onclick="removeRadioImage()">Удалить фото</button>
+      </div>
+    </div>
+
+    <label class="field-label">Название</label>
+    <input type="text" id="radioName" placeholder="Например, Русский рэп" maxlength="40">
+
+    <label class="field-label">Тип станции</label>
+    <div class="subtabs" style="margin-bottom:16px;">
+      <button class="subtab active" data-radio-type="local" onclick="setRadioType('local')"><span class="subtab-icon">💾</span> Локальная</button>
+      <button class="subtab" data-radio-type="online" onclick="setRadioType('online')"><span class="subtab-icon">🌐</span> Онлайн</button>
+    </div>
+
+    <div id="radioLocalFields">
+      <label class="field-label">Жанр / ключевое слово</label>
+      <input type="text" id="radioGenre" placeholder="phonk, рэп, лето...">
+      <div class="modal-sub" style="margin-top:-4px;">Плеер выберет все треки, в названии или артисте которых встречается это слово. Оставьте пустым — будут все подряд.</div>
+    </div>
+
+    <div id="radioOnlineFields" style="display:none;">
+      <label class="field-label">Ссылка на поток</label>
+      <input type="text" id="radioUrl" placeholder="https://...mp3 или .m3u8 или .aac">
+      <div class="modal-sub" style="margin-top:-4px;">Можно вставить прямую ссылку на поток. Не все сайты разрешают подключение из-за CORS.</div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn secondary" onclick="closeRadioAdd()">Отмена</button>
+      <button class="modal-btn primary" onclick="createRadioStation()">Создать</button>
     </div>
   </div>
 </div>
@@ -1475,6 +1646,10 @@ const BUILTIN_TRACKS = [
 let tracks = [];
 let playlists = [];
 let likedIds = new Set();
+let radioStations = [];        // { id, name, type: "local"|"online", genre, url, cover, emoji, color }
+let radioType = "local";        // для модалки
+let pendingRadioImage = null;
+let currentRadioId = null;      // если играет радио
 let currentId = null;
 let currentPlaylistId = null;
 let isPlaying = false;
@@ -1510,17 +1685,18 @@ const $ = id => document.getElementById(id);
 // ===== INDEXEDDB =====
 let db;
 const DB_NAME = "mymusic_v2";
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 function openDB() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
 
-    req.onupgradeneeded = e => {
+        req.onupgradeneeded = e => {
       const d = e.target.result;
       if (!d.objectStoreNames.contains("tracks")) d.createObjectStore("tracks", { keyPath: "id" });
       if (!d.objectStoreNames.contains("meta")) d.createObjectStore("meta");
       if (!d.objectStoreNames.contains("playlists")) d.createObjectStore("playlists", { keyPath: "id" });
+      if (!d.objectStoreNames.contains("radioStations")) d.createObjectStore("radioStations", { keyPath: "id" });
     };
 
     req.onsuccess = e => { db = e.target.result; resolve(); };
@@ -2530,14 +2706,96 @@ function render() {
     return;
   }
 
-  if (view === "fortrends") {
-    area.innerHTML = `
-      <div style="margin-bottom:24px;"><h1 style="font-size:40px;font-weight:900;letter-spacing:-1.5px;">Для вас и Тренды</h1></div>
-      <div class="subtabs">
-        <button class="subtab ${subtab==='foryou'?'active':''}" onclick="setSubtab('foryou')"><span class="subtab-icon">🎵</span> Для вас</button>
-        <button class="subtab ${subtab==='trends'?'active':''}" onclick="setSubtab('trends')"><span class="subtab-icon">🔥</span> Тренды</button>
+    if (view === "radio") {
+    let html = `
+      <div style="margin-bottom:24px;">
+        <h1 style="font-size:40px;font-weight:900;letter-spacing:-1.5px;margin-bottom:6px;">Радио</h1>
+        <p style="color:var(--text-2);font-size:14px;">Локальные станции из вашей библиотеки и онлайн-потоки</p>
       </div>
-      <div class="section-head"><h2 class="section-title">Подборки музыки</h2><span class="section-more">${playlists.length}</span></div>
+
+      <div class="section-head">
+        <h2 class="section-title">Мои станции</h2>
+        <button class="section-more" onclick="openRadioAdd()">+ Добавить станцию</button>
+      </div>`;
+
+    if (radioStations.length === 0) {
+      html += `<div class="empty">
+        <div class="empty-icon">📻</div>
+        <div class="empty-title">Нет станций</div>
+        <div class="empty-sub">Создайте первую — например, «Phonk» или «Для тренировки». Она соберётся из ваших треков по ключевому слову.</div>
+        <button class="empty-btn" onclick="openRadioAdd()">+ Создать станцию</button>
+      </div>`;
+    } else {
+      html += `<div class="radio-grid">`;
+      html += radioStations.map(st => {
+        const isLive = currentRadioId === st.id;
+        const coverHTML = st.cover ? `<img src="${st.cover}" alt="">` : st.emoji;
+        const sub = st.type === "online" ? "Онлайн-радио" : (st.genre ? `Локальное · "${st.genre}"` : "Локальное · все треки");
+        return `
+          <div class="radio-card ${isLive ? 'is-live' : ''}" onclick="playRadioStation('${st.id}')">
+            <div class="radio-actions">
+              <button class="radio-action-btn" onclick="deleteRadioStation('${st.id}', event)" title="Удалить">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+            <div class="radio-cover" style="background:${st.cover ? '#111' : st.color};">
+              ${coverHTML}
+              ${isLive ? `<span class="radio-live ${st.type === 'local' ? 'local' : ''}">${st.type === 'online' ? 'LIVE' : 'ON AIR'}</span>` : ''}
+            </div>
+            <div class="radio-title">${esc(st.name)}</div>
+            <div class="radio-meta">${esc(sub)}</div>
+            <button class="radio-play" onclick="event.stopPropagation();playRadioStation('${st.id}')">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+          </div>`;
+      }).join("");
+      html += `
+        <button class="card add" style="min-height:auto;" onclick="openRadioAdd()">
+          <div class="plus">+</div>
+          <div class="card-title">Новая станция</div>
+        </button>`;
+      html += `</div>`;
+    }
+
+    // Секция онлайн-идей (готовые станции для примера)
+    html += `
+      <div class="section-head" style="margin-top:32px;">
+        <h2 class="section-title">Популярные онлайн-радио</h2>
+        <span class="section-more">по ссылке</span>
+      </div>
+      <div class="radio-grid">
+        ${[
+          { n: "Radio Record", u: "https://radiorecord.hostingradio.ru/rr_main96.aacp", c: "#ef4444", e: "🎧" },
+          { n: "Europa Plus", u: "https://ep128.hostingradio.ru:8030/ep128", c: "#3b82f6", e: "🌍" },
+          { n: "DFM", u: "https://dfm.hostingradio.ru/dfm96.aacp", c: "#8b5cf6", e: "🎛️" },
+          { n: "Ретро FM", u: "https://retroserver.streamr.ru:8043/retro256.mp3", c: "#f59e0b", e: "📻" }
+        ].map(r => `
+          <div class="radio-card" onclick="addAndPlayOnline('${r.n}','${r.u}','${r.c}','${r.e}')">
+            <div class="radio-cover" style="background:${r.c};"><span>${r.e}</span></div>
+            <div class="radio-title">${r.n}</div>
+            <div class="radio-meta">Онлайн-поток</div>
+            <button class="radio-play" onclick="event.stopPropagation();addAndPlayOnline('${r.n}','${r.u}','${r.c}','${r.e}')">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+          </div>
+        `).join("")}
+      </div>`;
+
+    area.innerHTML = html;
+    return;
+  }
+
+    if (view === "fortrends" || view === "books") {
+    const isBooks = view === "books";
+    const title = isBooks ? "Книги" : "Мои подкасты";
+    const subtabKey = isBooks ? "books" : "foryou";
+    area.innerHTML = `
+      <div style="margin-bottom:24px;"><h1 style="font-size:40px;font-weight:900;letter-spacing:-1.5px;">${title}</h1></div>
+      <div class="subtabs">
+        <button class="subtab ${subtab==='foryou'?'active':''}" onclick="setSubtab('foryou')"><span class="subtab-icon">🎵</span> ${isBooks ? 'Читаю' : 'Слушаю'}</button>
+        <button class="subtab ${subtab==='trends'?'active':''}" onclick="setSubtab('trends')"><span class="subtab-icon">🔥</span> ${isBooks ? 'Хочу прочитать' : 'Популярное'}</button>
+      </div>
+      <div class="section-head"><h2 class="section-title">${isBooks ? 'Мои книги' : 'Мои подборки'}</h2><span class="section-more">${playlists.length}</span></div>
       <div class="grid">
         ${playlists.map(pl => {
           const coverHTML = pl.customImage ? `<img src="${pl.customImage}" alt="">` : pl.emoji;
@@ -2636,22 +2894,24 @@ audio.addEventListener("play", () => {
     audioCtx.resume().catch(()=>{});
   }
 });
-audio.addEventListener("pause", () => { isPlaying = false; updatePlayIcons(); updateFullPlayerUI(); render(); });
-audio.addEventListener("timeupdate", () => {
-  audio.addEventListener("play", () => {
+audio.addEventListener("play", () => {
   isPlaying = true;
   updatePlayIcons();
   updateFullPlayerUI();
   document.querySelector(".wave-hero")?.classList.add("playing");
+  if (audioCtx && audioCtx.state === "suspended") audioCtx.resume().catch(()=>{});
 });
+
 audio.addEventListener("pause", () => {
   isPlaying = false;
   updatePlayIcons();
   updateFullPlayerUI();
   document.querySelector(".wave-hero")?.classList.remove("playing");
 });
+
+audio.addEventListener("timeupdate", () => {
   const p = audio.duration ? (audio.currentTime/audio.duration)*100 : 0;
-  $("progressFill").style.width = p+"%"; 
+  $("progressFill").style.width = p+"%";
   $("mpProgressFill").style.width = p+"%";
   $("fpProgressFill").style.width = p+"%";
   $("timeCurrent").textContent = fmt(audio.currentTime);
@@ -2662,6 +2922,7 @@ audio.addEventListener("loadedmetadata", () => {
   $("fpTimeTotal").textContent = fmt(audio.duration);
 });
 audio.addEventListener("ended", () => {
+  if (handleRadioEnded()) return;
   if (repeat === "one") { audio.currentTime = 0; audio.play(); return; }
   nextTrack();
 });
@@ -3010,6 +3271,193 @@ async function deleteCurrentSong() {
   toast("Трек удалён");
 }
 
+
+// ===== RADIO =====
+function openRadioAdd() {
+  $("radioName").value = "";
+  $("radioGenre").value = "";
+  $("radioUrl").value = "";
+  pendingRadioImage = null;
+  $("radioImgPreview").innerHTML = "📻";
+  radioType = "local";
+  setRadioType("local");
+  $("radioAddModalBg").classList.add("active");
+}
+function closeRadioAdd() {
+  $("radioAddModalBg").classList.remove("active");
+}
+$("radioAddModalBg").addEventListener("click", e => {
+  if (e.target.id === "radioAddModalBg") closeRadioAdd();
+});
+
+function setRadioType(t) {
+  radioType = t;
+  document.querySelectorAll("[data-radio-type]").forEach(b => {
+    b.classList.toggle("active", b.dataset.radioType === t);
+  });
+  $("radioLocalFields").style.display = t === "local" ? "block" : "none";
+  $("radioOnlineFields").style.display = t === "online" ? "block" : "none";
+}
+
+function pickRadioImage() {
+  const inp = document.createElement("input");
+  inp.type = "file"; inp.accept = "image/*";
+  inp.onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    pendingRadioImage = await fileToDataURL(f);
+    $("radioImgPreview").innerHTML = `<img src="${pendingRadioImage}" alt="">`;
+  };
+  inp.click();
+}
+function removeRadioImage() {
+  pendingRadioImage = null;
+  $("radioImgPreview").innerHTML = "📻";
+}
+
+async function createRadioStation() {
+  const name = $("radioName").value.trim();
+  if (!name) { toast("Введи название"); return; }
+
+  if (radioType === "local") {
+    const genre = $("radioGenre").value.trim();
+    const st = {
+      id: "rs_" + Date.now(),
+      name,
+      type: "local",
+      genre,
+      cover: pendingRadioImage,
+      emoji: "📻",
+      color: rnd(COL)
+    };
+    radioStations.push(st);
+    await put("radioStations", st);
+    closeRadioAdd();
+    toast("Станция создана");
+    render();
+    return;
+  }
+
+  if (radioType === "online") {
+    const url = $("radioUrl").value.trim();
+    if (!url || !/^https?:\/\//i.test(url)) { toast("Нужна ссылка http(s)://..."); return; }
+    const st = {
+      id: "rs_" + Date.now(),
+      name,
+      type: "online",
+      url,
+      cover: pendingRadioImage,
+      emoji: "📡",
+      color: rnd(COL)
+    };
+    radioStations.push(st);
+    await put("radioStations", st);
+    closeRadioAdd();
+    toast("Онлайн-станция добавлена");
+    render();
+  }
+}
+
+async function deleteRadioStation(id, ev) {
+  if (ev) ev.stopPropagation();
+  if (!confirm("Удалить станцию?")) return;
+  radioStations = radioStations.filter(s => s.id !== id);
+  await del("radioStations", id);
+  if (currentRadioId === id) {
+    audio.pause();
+    audio.src = "";
+    currentRadioId = null;
+    document.body.classList.remove("radio-live");
+    $("playerTitle").textContent = "Ничего не играет";
+    $("playerArtist").textContent = "";
+  }
+  render();
+}
+
+// Собирает локальный плейлист по ключевому слову
+function getLocalStationTracks(station) {
+  const q = (station.genre || "").toLowerCase().trim();
+  if (!q) return tracks.filter(t => !t.isBuiltin || true); // все
+  return tracks.filter(t => {
+    const title = (t.title || "").toLowerCase();
+    const artist = (t.artist || "").toLowerCase();
+    return title.includes(q) || artist.includes(q);
+  });
+}
+
+async function addAndPlayOnline(name, url, color, emoji) {
+  const exist = radioStations.find(s => s.url === url);
+  if (exist) {
+    playRadioStation(exist.id);
+    return;
+  }
+  const st = {
+    id: "rs_" + Date.now(),
+    name,
+    type: "online",
+    url,
+    cover: null,
+    emoji,
+    color
+  };
+  radioStations.push(st);
+  await put("radioStations", st);
+  playRadioStation(st.id);
+}
+
+async function playRadioStation(id) {
+  const st = radioStations.find(s => s.id === id);
+  if (!st) return;
+
+  currentRadioId = id;
+  document.body.classList.add("radio-live");
+
+  if (st.type === "online") {
+    // Прямая ссылка на поток
+    audio.pause();
+    if (currentBlobUrl) { URL.revokeObjectURL(currentBlobUrl); currentBlobUrl = null; }
+    audio.src = st.url;
+    audio.play().catch(err => {
+      toast("Не удалось подключиться к потоку");
+      console.warn(err);
+    });
+    $("playerTitle").textContent = st.name;
+    $("playerArtist").textContent = "Онлайн-радио";
+    $("playerArtWrap").style.background = st.color;
+    if (st.cover) $("playerArt").innerHTML = `<img src="${st.cover}" alt="">`;
+    else $("playerArt").innerHTML = `<span>${st.emoji}</span>`;
+    // Скрыть перемотку — у потока её нет
+    $("progress").style.pointerEvents = "none";
+    $("timeTotal").textContent = "LIVE";
+    render();
+    return;
+  }
+
+  // Локальная станция — играем треки по кругу
+  const list = getLocalStationTracks(st);
+  if (!list.length) { toast("Нет треков под этот фильтр"); return; }
+
+  // Ставим спец-очередь
+  window._radioQueue = list;
+  window._radioIndex = 0;
+
+  playById(list[0].id);
+  $("playerTitle").textContent = st.name;
+  $("playerArtist").textContent = `Локальное радио · ${list.length} треков`;
+  render();
+}
+
+// Обработка окончания трека в режиме радио
+function handleRadioEnded() {
+  if (!currentRadioId) return false;
+  const st = radioStations.find(s => s.id === currentRadioId);
+  if (!st || st.type !== "local") return false;
+  const q = window._radioQueue || [];
+  if (!q.length) return false;
+  window._radioIndex = (window._radioIndex + 1) % q.length;
+  playById(q[window._radioIndex].id);
+  return true;
+}
+
 // ===== PLUS SUBSCRIPTION =====
 function openPlusModal() {
   if (isPlus) { toast("У вас уже есть Plus"); return; }
@@ -3264,6 +3712,7 @@ function fileToDataURL(file) {
       }
     }
     try { playlists = await getAll("playlists"); } catch (e) { console.error(e); }
+    try { radioStations = await getAll("radioStations"); } catch (e) { console.error(e); }
     try { likedIds = new Set((await getMeta("likedIds")) || []); } catch (e) {}
 
     try {
